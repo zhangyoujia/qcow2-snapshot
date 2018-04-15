@@ -1,0 +1,483 @@
+【1】两个镜像: test.qcow2 => base.qcow2
+[root@localhost /home/qcow2-snapshot] ls -l
+total 653312
+-rw-r--r-- 1 root root 1090519040 Jun  7  2017 base.qcow2
+-rw-r--r-- 1 root root  654311424 Mar 21 11:24 test.qcow2
+
+【2】查看镜像信息: backing file与快照
+[root@localhost /home/qcow2-snapshot] qcow2-dump test.qcow2 
+
+File: test.qcow2
+--------------------------------------------------------------------------
+
+magic: 0x514649fb
+version: 3
+backing_file_offset: 0x108
+backing_file_size: 10
+backing_file: base.qcow2																			【backing file: 模板镜像】
+fs_type: sffs
+virtual_size: 1073741824 / 1024M / 1G
+disk_size: 649068544 / 619M / 0G
+seek_end: 654311424 [0x27000000] / 624M / 0G
+cluster_bits: 16
+cluster_size: 65536
+crypt_method: 0
+csize_shift: 54
+csize_mask: 255
+cluster_offset_mask: 0x3fffffffffffff
+l1_table_offset: 0x30000
+l1_size: 2
+l1_vm_state_index: 2
+l2_size: 8192
+refcount_order: 4
+refcount_bits: 16
+refcount_block_bits: 15
+refcount_block_size: 32768
+refcount_table_offset: 0x10000
+refcount_table_clusters: 1
+snapshots_offset: 0x1d5f0000
+nb_snapshots: 3
+incompatible_features: 00000000
+compatible_features: 00000000
+autoclear_features: 00000000
+
+==========================================================================
+
+Active Snapshot:
+--------------------------------------------------------------------------
+L1 Table:       [offset: 0x30000, len: 2]
+
+Result:
+L1 Table:       unaligned: 0, invalid: 0, unused: 0, used: 2
+L2 Table:       unaligned: 0, invalid: 0, unused: 8674, used: 7710
+                new: 7710
+
+==========================================================================
+
+Inactive Snapshot:																					【3个内部快照】
+--------------------------------------------------------------------------
+snapshot[0]:	l1_table_offset: 0xa080000, l1_size: 2
+                ID: 1, NAME: aaa
+                DATE: 2018-03-21 11:20:29, SIZE: 0
+
+snapshot[1]:	l1_table_offset: 0x13740000, l1_size: 2
+                ID: 2, NAME: bbb
+                DATE: 2018-03-21 11:21:01, SIZE: 0
+
+snapshot[2]:	l1_table_offset: 0x1d5e0000, l1_size: 2
+                ID: 3, NAME: ccc
+                DATE: 2018-03-21 11:24:18, SIZE: 0
+--------------------------------------------------------------------------
+
+snapshot[0]:	ID: 1, NAME: aaa
+L1 Table:       [offset: 0xa080000, len: 2]
+
+Result:
+L1 Table:       unaligned: 0, invalid: 0, unused: 0, used: 2
+L2 Table:       unaligned: 0, invalid: 0, unused: 13822, used: 2562
+                new: 980
+
+--------------------------------------------------------------------------
+
+snapshot[1]:	ID: 2, NAME: bbb
+L1 Table:       [offset: 0x13740000, len: 2]
+
+Result:
+L1 Table:       unaligned: 0, invalid: 0, unused: 0, used: 2
+L2 Table:       unaligned: 0, invalid: 0, unused: 11804, used: 4580
+                new: 783
+
+--------------------------------------------------------------------------
+
+snapshot[2]:	ID: 3, NAME: ccc
+L1 Table:       [offset: 0x1d5e0000, len: 2]
+
+Result:
+L1 Table:       unaligned: 0, invalid: 0, unused: 0, used: 2
+L2 Table:       unaligned: 0, invalid: 0, unused: 10034, used: 6350
+                new: 392
+
+==========================================================================
+
+Refcount Table:
+--------------------------------------------------------------------------
+Refcount Table:	[offset: 0x10000, len: 8192]
+
+Result:
+Refcount Table:	unaligned: 0, invalid: 0, unused: 8191, used: 1
+Refcount:       error: 0, leak: 0, unused: 7015, used: 9881
+
+==========================================================================
+
+COPIED OFLAG:
+--------------------------------------------------------------------------
+
+Result:
+L1 Table ERROR OFLAG_COPIED: 0
+L2 Table ERROR OFLAG_COPIED: 0
+
+Defrag Release:   23 [1507328 / 1M / 0G]
+Active Cluster:   7710 [505282560 / 481M / 0G]
+Active L2 COPIED: 2360 [154664960 / 147M / 0G]
+Inactive Cluster: 2165 [141885440 / 135M / 0G]
+All Used Cluster: 9881 [647561216 / 617M / 0G]
+
+==========================================================================
+
+Summary:
+preallocation:  off
+Refcount Table:	unaligned: 0, invalid: 0, unused: 8191, used: 1
+Refcount:       error: 0, leak: 0, unused: 7015, used: 9881
+L1 Table:       unaligned: 0, invalid: 0, unused: 0, used: 8
+L2 Table:       unaligned: 0, invalid: 0, unused: 44334, used: 21202
+
+##########################################################################
+######             Haha:  qcow2 image is good!  Y(^_^)Y             ######
+##########################################################################
+
+==========================================================================
+
+【3】-m reverse: 生成反向增量镜像
+[root@localhost /home/qcow2-snapshot] qcow2-snapshot -c -m reverse test.qcow2 						【内部快照转换为外部快照_反向增量】
+
+File:   test.qcow2
+Output: ./
+
+----------------------------------------------------------------
+
+magic: 0x514649fb
+version: 3
+backing_file_offset: 0x108
+backing_file_size: 10
+backing_file: base.qcow2
+fs_type: sffs
+output_fs_type: sffs
+virtual_size: 1073741824 / 1024M / 1G
+disk_size: 649068544 / 619M / 0G
+seek_end: 654311424 [0x27000000] / 624M / 0G
+cluster_bits: 16
+cluster_size: 65536
+crypt_method: 0
+csize_shift: 54
+csize_mask: 255
+cluster_offset_mask: 0x3fffffffffffff
+l1_table_offset: 0x30000
+l1_size: 2
+l1_vm_state_index: 2
+l2_size: 8192
+refcount_order: 4
+refcount_bits: 16
+refcount_block_bits: 15
+refcount_block_size: 32768
+refcount_table_offset: 0x10000
+refcount_table_clusters: 1
+snapshots_offset: 0x1d5f0000
+nb_snapshots: 3
+incompatible_features: 00000000
+compatible_features: 00000000
+autoclear_features: 00000000
+
+================================================================
+
+Active Snapshot:
+----------------------------------------------------------------
+L1 Table:       [offset: 0x30000, len: 2]
+
+Result:
+L1 Table:       unused: 0 used: 2
+L2 Table:       unused: 8674 used: 7710
+
+================================================================
+
+Inactive Snapshot:
+----------------------------------------------------------------
+snapshot[0]:	l1_table_offset: 0xa080000, l1_size: 2
+                ID: 1, NAME: aaa
+                DATE: 2018-03-21 11:20:29, SIZE: 0
+
+snapshot[1]:	l1_table_offset: 0x13740000, l1_size: 2
+                ID: 2, NAME: bbb
+                DATE: 2018-03-21 11:21:01, SIZE: 0
+
+snapshot[2]:	l1_table_offset: 0x1d5e0000, l1_size: 2
+                ID: 3, NAME: ccc
+                DATE: 2018-03-21 11:24:18, SIZE: 0
+----------------------------------------------------------------
+
+snapshot[0]:	ID: 1, NAME: aaa
+L1 Table:       [offset: 0xa080000, len: 2]
+
+Result:
+L1 Table:       unused: 0 used: 2
+L2 Table:       unused: 13822 used: 2562
+
+----------------------------------------------------------------
+
+snapshot[1]:	ID: 2, NAME: bbb
+L1 Table:       [offset: 0x13740000, len: 2]
+
+Result:
+L1 Table:       unused: 0 used: 2
+L2 Table:       unused: 11804 used: 4580
+
+----------------------------------------------------------------
+
+snapshot[2]:	ID: 3, NAME: ccc
+L1 Table:       [offset: 0x1d5e0000, len: 2]
+
+Result:
+L1 Table:       unused: 0 used: 2
+L2 Table:       unused: 10034 used: 6350
+
+================================================================
+
+Refcount Table:
+----------------------------------------------------------------
+Refcount Table:	[offset: 0x10000, len: 8192]
+
+Result:
+Refcount Table:	unused: 8191, used: 1
+Refcount:       unused: 22887, used: 9881
+
+================================================================
+
+Summary:
+----------------------------------------------------------------
+
+Defrag Release:   23 [1507328 / 1M / 0G]
+Active Cluster:   7710 [505282560 / 481M / 0G]
+Active L2 COPIED: 2360 [154664960 / 147M / 0G]
+Inactive Cluster: 2165 [141885440 / 135M / 0G]
+All Used Cluster: 9881 [647561216 / 617M / 0G]
+
+================================================================
+
+Converting: [do not interrupt]
+
+################################################################  100%
+
+================================================================
+
+Convert result:
+----------------------------------------------------------------
+
+snapshot[0] => snapshot[1] => snapshot[2] => active snapshot										【反向增量镜像链】
+
+================================================================
+
+【4】
+[root@localhost /home/qcow2-snapshot] ls -ltr
+total 1292288
+-rw-r--r-- 1 root root 1090519040 Jun  7  2017 base.qcow2
+-rw-r--r-- 1 root root  654311424 Mar 21 11:24 test.qcow2
+---------- 1 root root   25952256 Mar 21 11:26 test_snapshot[0].qcow2								【生成反向增量镜像】
+---------- 1 root root   50528256 Mar 21 11:26 test_snapshot[1].qcow2
+---------- 1 root root   65929216 Mar 21 11:26 test_snapshot[2].qcow2
+---------- 1 root root  505675776 Mar 21 11:26 test_active.qcow2
+
+【5】
+[root@localhost /home/qcow2-snapshot] qcow2-dump test_active.qcow2 
+
+File: test_active.qcow2
+--------------------------------------------------------------------------
+
+magic: 0x514649fb
+version: 3
+backing_file_offset: 0x108
+backing_file_size: 10
+backing_file: base.qcow2																			【backing file: 模板镜像】
+fs_type: sffs
+virtual_size: 1073741824 / 1024M / 1G
+disk_size: 507510784 / 484M / 0G
+seek_end: 505675776 [0x1e240000] / 482M / 0G
+cluster_bits: 16
+cluster_size: 65536
+crypt_method: 0
+csize_shift: 54
+csize_mask: 255
+cluster_offset_mask: 0x3fffffffffffff
+l1_table_offset: 0x30000
+l1_size: 2
+l1_vm_state_index: 2
+l2_size: 8192
+refcount_order: 4
+refcount_bits: 16
+refcount_block_bits: 15
+refcount_block_size: 32768
+refcount_table_offset: 0x10000
+refcount_table_clusters: 1
+snapshots_offset: 0x0
+nb_snapshots: 0
+incompatible_features: 00000000
+compatible_features: 00000000
+autoclear_features: 00000000
+
+==========================================================================
+
+Active Snapshot:
+--------------------------------------------------------------------------
+L1 Table:       [offset: 0x30000, len: 2]
+
+Result:
+L1 Table:       unaligned: 0, invalid: 0, unused: 0, used: 2
+L2 Table:       unaligned: 0, invalid: 0, unused: 8674, used: 7710
+                new: 7710
+
+==========================================================================
+
+Refcount Table:
+--------------------------------------------------------------------------
+Refcount Table:	[offset: 0x10000, len: 8192]
+
+Result:
+Refcount Table:	unaligned: 0, invalid: 0, unused: 8191, used: 1
+Refcount:       error: 0, leak: 0, unused: 9180, used: 7716
+
+==========================================================================
+
+COPIED OFLAG:
+--------------------------------------------------------------------------
+
+Result:
+L1 Table ERROR OFLAG_COPIED: 0
+L2 Table ERROR OFLAG_COPIED: 0
+
+Defrag Release:   28 [1835008 / 1M / 0G]
+Active Cluster:   7710 [505282560 / 481M / 0G]
+Active L2 COPIED: 7710 [505282560 / 481M / 0G]
+All Used Cluster: 7716 [505675776 / 482M / 0G]
+
+==========================================================================
+
+Summary:
+preallocation:  off
+Refcount Table:	unaligned: 0, invalid: 0, unused: 8191, used: 1
+Refcount:       error: 0, leak: 0, unused: 9180, used: 7716
+L1 Table:       unaligned: 0, invalid: 0, unused: 0, used: 2
+L2 Table:       unaligned: 0, invalid: 0, unused: 8674, used: 7710
+
+##########################################################################
+######             Haha:  qcow2 image is good!  Y(^_^)Y             ######
+##########################################################################
+
+==========================================================================
+
+【6】
+[root@localhost /home/qcow2-snapshot] qcow2-dump test_snapshot\[0\].qcow2 
+
+File: test_snapshot[0].qcow2
+--------------------------------------------------------------------------
+
+magic: 0x514649fb
+version: 3
+backing_file_offset: 0x108
+backing_file_size: 24
+backing_file: ./test_snapshot[1].qcow2																【backing file: 模板镜像】
+fs_type: sffs
+virtual_size: 1073741824 / 1024M / 1G
+disk_size: 27262976 / 26M / 0G
+seek_end: 25952256 [0x18c0000] / 24M / 0G
+cluster_bits: 16
+cluster_size: 65536
+crypt_method: 0
+csize_shift: 54
+csize_mask: 255
+cluster_offset_mask: 0x3fffffffffffff
+l1_table_offset: 0x30000
+l1_size: 2
+l1_vm_state_index: 2
+l2_size: 8192
+refcount_order: 4
+refcount_bits: 16
+refcount_block_bits: 15
+refcount_block_size: 32768
+refcount_table_offset: 0x10000
+refcount_table_clusters: 1
+snapshots_offset: 0x0
+nb_snapshots: 0
+incompatible_features: 00000000
+compatible_features: 00000000
+autoclear_features: 00000000
+
+==========================================================================
+
+Active Snapshot:
+--------------------------------------------------------------------------
+L1 Table:       [offset: 0x30000, len: 2]
+
+Result:
+L1 Table:       unaligned: 0, invalid: 0, unused: 0, used: 2
+L2 Table:       unaligned: 0, invalid: 0, unused: 15994, used: 390
+                new: 390
+
+==========================================================================
+
+Refcount Table:
+--------------------------------------------------------------------------
+Refcount Table:	[offset: 0x10000, len: 8192]
+
+Result:
+Refcount Table:	unaligned: 0, invalid: 0, unused: 8191, used: 1
+Refcount:       error: 0, leak: 0, unused: 16500, used: 396
+
+==========================================================================
+
+COPIED OFLAG:
+--------------------------------------------------------------------------
+
+Result:
+L1 Table ERROR OFLAG_COPIED: 0
+L2 Table ERROR OFLAG_COPIED: 0
+
+Defrag Release:   20 [1310720 / 1M / 0G]
+Active Cluster:   390 [25559040 / 24M / 0G]
+Active L2 COPIED: 390 [25559040 / 24M / 0G]
+All Used Cluster: 396 [25952256 / 24M / 0G]
+
+==========================================================================
+
+Summary:
+preallocation:  off
+Refcount Table:	unaligned: 0, invalid: 0, unused: 8191, used: 1
+Refcount:       error: 0, leak: 0, unused: 16500, used: 396
+L1 Table:       unaligned: 0, invalid: 0, unused: 0, used: 2
+L2 Table:       unaligned: 0, invalid: 0, unused: 15994, used: 390
+
+##########################################################################
+######             Haha:  qcow2 image is good!  Y(^_^)Y             ######
+##########################################################################
+
+==========================================================================
+
+【7】
+[root@localhost /home/qcow2-snapshot] qemu-nbd -c /dev/nbd0 test_snapshot\[0\].qcow2 
+[root@localhost /home/qcow2-snapshot] 
+[root@localhost /home/qcow2-snapshot] ps aux | grep nbd
+root     17640  0.0  0.1 280368 29408 ?        Ssl  11:36   0:00 qemu-nbd -c /dev/nbd0 test_snapshot[0].qcow2
+root     17644  0.0  0.0      0     0 ?        S<   11:36   0:00 [nbd0]
+root     17874  0.0  0.0  24004  1348 pts/1    S+   11:36   0:00 grep nbd
+[root@localhost /home/qcow2-snapshot] 
+[root@localhost /home/qcow2-snapshot] ll /proc/17640/fd
+total 0
+lrwx------ 1 root root 64 Mar 21 11:37 0 -> /dev/null
+lrwx------ 1 root root 64 Mar 21 11:37 1 -> /dev/null
+lrwx------ 1 root root 64 Mar 21 11:37 10 -> socket:[425795607]
+lr-x------ 1 root root 64 Mar 21 11:37 11 -> /home/qcow2-snapshot/test_snapshot[1].qcow2
+lr-x------ 1 root root 64 Mar 21 11:37 12 -> /home/qcow2-snapshot/test_snapshot[2].qcow2
+lr-x------ 1 root root 64 Mar 21 11:37 13 -> /home/qcow2-snapshot/test_active.qcow2
+lr-x------ 1 root root 64 Mar 21 11:37 14 -> /home/qcow2-snapshot/base.qcow2
+lrwx------ 1 root root 64 Mar 21 11:37 15 -> socket:[425795609]
+lrwx------ 1 root root 64 Mar 21 11:37 16 -> socket:[425791343]
+lrwx------ 1 root root 64 Mar 21 11:37 17 -> socket:[425795611]
+lrwx------ 1 root root 64 Mar 21 11:37 18 -> /dev/nbd0
+lrwx------ 1 root root 64 Mar 21 11:37 2 -> /dev/null
+lrwx------ 1 root root 64 Mar 21 11:37 3 -> anon_inode:[signalfd]
+lrwx------ 1 root root 64 Mar 21 11:37 4 -> anon_inode:[eventpoll]
+lrwx------ 1 root root 64 Mar 21 11:37 5 -> anon_inode:[eventfd]
+lrwx------ 1 root root 64 Mar 21 11:37 6 -> anon_inode:[eventpoll]
+lrwx------ 1 root root 64 Mar 21 11:37 7 -> anon_inode:[eventfd]
+lrwx------ 1 root root 64 Mar 21 11:37 8 -> anon_inode:[eventfd]
+lrwx------ 1 root root 64 Mar 21 11:37 9 -> /home/qcow2-snapshot/test_snapshot[0].qcow2
+
+【8】反向增量镜像链:
+test_snapshot[0].qcow2 => test_snapshot[1].qcow2 => test_snapshot[2].qcow2 => test_active.qcow2 => base.qcow2
